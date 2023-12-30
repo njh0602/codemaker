@@ -36,12 +36,15 @@ int main()
     TblLoader::initialize("codemaker/Tables");
 
     auto* d1 = TblCharacter::get(1);
-    cout << d1->character_name_ << endl; // "emily"
-    cout << d1->max_level_ << endl; // 50
-    cout << d1->cost_ << endl; // 100
-    for (const auto& item : d1->requirement_items_)
+    if (d1 != nullptr)
     {
-        cout << EnumConverter<ItemType>::toString(item) << endl; 
+        cout << d1->character_name_ << endl; // "emily"
+        cout << d1->max_level_ << endl; // 50
+        cout << d1->cost_ << endl; // 100
+        for (const auto& item : d1->requirement_items_)
+        {
+            cout << EnumConverter<ItemType>::toString(item) << endl; 
+        }
     }
 }
 ```
