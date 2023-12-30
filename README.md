@@ -26,25 +26,9 @@ int,string,int,int,enum<CharacterType>,enum<ItemType>,list<string>,list<enum<Ite
 ```
 (TblCharacter.csv)
 
-```
-item_id,item_name,item_type,item_level,cost,required_level
-string,string,enum<ItemType>,int,int,int
-1,sword,0,100,1,1
-2,shield,1,200,2,2
-3,potion,1,300,3,3
-4,bow weapon,2,300,4,4
-5,staff,3,300,5,5
-6,robe,4,300,6,6
-7,ring,5,300,7,7
-8,scroll,6,300,8,8
-9,axe,7,300,9,9
-10,helmet,8,300,0,0
-```
-(TblItem.csv)
-
 
 The script generates complex C++ code, but its usage is incredibly simple, as shown below.
-```
+```cpp
 #include "./generated/Tables.hpp"
 
 int main()
