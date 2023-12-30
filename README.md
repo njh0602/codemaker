@@ -49,5 +49,16 @@ int main()
 }
 ```
 
+output:
+```
+emily
+50
+100
+AK47
+AK74U
+M16A2
+M16A4
+```
+
 # Note
 WIP
