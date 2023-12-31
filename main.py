@@ -1,79 +1,29 @@
+from jinja2 import Template
 import os
 import csv
 import re
 
 def generate_type_from_csv(output_folder, folder_path):
-    generate_path = os.path.join(output_folder, f"Types.hpp")
-
-    header_code = """// This file has been generated automatically. Don't modify it.
-
-#ifndef __TYPES_H__
-#define __TYPES_H__
-
-#include <string>
-#include <unordered_map>
-
-template<typename T>
-struct EnumConverter;
-
-static const std::string EmptyString{};\n
-"""
-
-    enum_names = []
+    enum_datas = []
     csv_files = [f for f in os.listdir(folder_path) if f.endswith('.csv')]
     for file_name in csv_files:
-        file_path = os.path.join(folder_path, file_name)
-        enum_name = os.path.splitext(file_name)[0]
-        enum_names.append(enum_name)
-
-        with open(file_path, newline='') as csvfile:
+        with open(os.path.join(folder_path, file_name), newline='') as csvfile:
             csv_reader = csv.reader(csvfile)
             data = list(csv_reader)
-            header_code += generate_enum_class(data, file_name, enum_name)
-            
-        header_code += '\n'
+            enum_datas.append({
+                'file_name': file_name, 
+                'enum_name': os.path.splitext(file_name)[0],
+                'enum_values' : [enum_value[0] for enum_value in data]
+            })
 
-    header_code += "#endif // __TYPES_H__"
+    with open('./template/Types.tt', 'r') as file:
+        template_content = file.read()
 
-    with open(generate_path, 'w') as single_header_file:
-        single_header_file.write(header_code)
+    template = Template(template_content)
+    cpp_code = template.render(enums=enum_datas)
 
-def generate_enum_class(data, file_name, enum_name):
-    cpp_code = f'// generated from {file_name}\n'
-    cpp_code += f"enum class {enum_name}\n"
-    cpp_code += "{\n"
-
-    for index, enum_value in enumerate(data):
-        cpp_code += f"    {enum_value[0]} = {index},\n"
-
-    cpp_code += "};\n\n"
-
-    cpp_code += f'template<> struct EnumConverter<{enum_name}> {{\n'
-    cpp_code += f'    static {enum_name} fromString(const std::string& str) {{\n'
-    cpp_code += f'        static const std::unordered_map<std::string, {enum_name}> enumMap {{\n'
-    for enum_value in data:
-        cpp_code += f'            {{"{enum_value[0]}", {enum_name}::{enum_value[0]}}},\n'
-    cpp_code += '        };\n'
-    cpp_code += '        auto it = enumMap.find(str);\n'
-    cpp_code += '        if (it == enumMap.end()) {\n'
-    cpp_code += f'            return {enum_name}{{}};\n'
-    cpp_code += '        }\n'
-    cpp_code += '        return it->second;\n'
-    cpp_code += '    }\n'
-    cpp_code += f'    static const std::string& toString({enum_name} enumValue) {{\n'
-    cpp_code += f'        static const std::unordered_map<{enum_name}, std::string> strMap {{\n'
-    for enum_value in data:
-        cpp_code += f'            {{{enum_name}::{enum_value[0]}, "{enum_value[0]}"}},\n'
-    cpp_code += '        };\n'
-    cpp_code += '        auto it = strMap.find(enumValue);\n'
-    cpp_code += '        if (it == strMap.end()) {\n'
-    cpp_code += f'            return EmptyString;\n'
-    cpp_code += '        }\n'
-    cpp_code += '        return it->second;\n'
-    cpp_code += '    }\n'
-    cpp_code += '};\n'
-
-    return cpp_code
+    with open(os.path.join(output_folder, f"Types.hpp"), 'w') as single_header_file:
+        single_header_file.write(cpp_code)
 
 def generate_table_from_csv(output_folder, folder_path):
     generate_path = os.path.join(output_folder, f"Tables.hpp")

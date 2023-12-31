@@ -1,0 +1,46 @@
+// This file has been generated automatically. Don't modify it.
+
+#ifndef __TYPES_H__
+#define __TYPES_H__
+
+#include <string>
+#include <unordered_map>
+
+template<typename T>
+struct EnumConverter;
+
+static const std::string EmptyString{};
+{% for enum_data in enums %}
+// Generated from {{ enum_data.file_name }}
+enum class {{ enum_data.enum_name }} {
+    {% for enum_value in enum_data.enum_values %}{{ enum_value }} = {{ loop.index0 }}{% if not loop.last %},
+    {% endif %}{% endfor %}
+};
+
+template<> struct EnumConverter<{{ enum_data.enum_name }}> {
+    static {{ enum_data.enum_name }} fromString(const std::string& str) {
+        static const std::unordered_map<std::string, {{ enum_data.enum_name }}> enumMap {
+            {% for enum_value in enum_data.enum_values %}{"{{ enum_value }}", {{ enum_data.enum_name }}::{{ enum_value }}},{% if not loop.last %}
+            {% endif %}{% endfor %}
+        };
+        auto it = enumMap.find(str);
+        if (it == enumMap.end()) {
+            return {{ enum_data.enum_name }}{};
+        }
+        return it->second;
+    }
+
+    static const std::string& toString({{ enum_data.enum_name }} enumValue) {
+        static const std::unordered_map<{{ enum_data.enum_name }}, std::string> strMap {
+            {% for enum_value in enum_data.enum_values %}{ {{ enum_data.enum_name }}::{{ enum_value }}, "{{ enum_value }}"},{% if not loop.last %}
+            {% endif %}{% endfor %}
+        };
+        auto it = strMap.find(enumValue);
+        if (it == strMap.end()) {
+            return EmptyString;
+        }
+        return it->second;
+    }
+};
+{% endfor %}
+#endif // __TYPES_H__
