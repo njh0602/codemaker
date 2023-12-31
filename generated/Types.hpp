@@ -75,6 +75,9 @@ enum class ItemType
     AK74U = 2,
     M16A2 = 3,
     M16A4 = 4,
+    MP5SD = 5,
+    MP7A2 = 6,
+    GLOCK19 = 7,
 };
 
 template<> struct EnumConverter<ItemType> {
@@ -85,6 +88,9 @@ template<> struct EnumConverter<ItemType> {
             {"AK74U", ItemType::AK74U},
             {"M16A2", ItemType::M16A2},
             {"M16A4", ItemType::M16A4},
+            {"MP5SD", ItemType::MP5SD},
+            {"MP7A2", ItemType::MP7A2},
+            {"GLOCK19", ItemType::GLOCK19},
         };
         auto it = enumMap.find(str);
         if (it == enumMap.end()) {
@@ -99,6 +105,9 @@ template<> struct EnumConverter<ItemType> {
             {ItemType::AK74U, "AK74U"},
             {ItemType::M16A2, "M16A2"},
             {ItemType::M16A4, "M16A4"},
+            {ItemType::MP5SD, "MP5SD"},
+            {ItemType::MP7A2, "MP7A2"},
+            {ItemType::GLOCK19, "GLOCK19"},
         };
         auto it = strMap.find(enumValue);
         if (it == strMap.end()) {
