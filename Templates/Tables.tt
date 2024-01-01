@@ -30,24 +30,18 @@ static std::vector<T> split(const std::string& s, char delimiter = ',') {
     }
     return tokens;
 }
-
-// generated from TblCharacter.csv
-class TblCharacter {
+{% for class_data in classes %}
+// generated from {{ class_data.file_name }}
+class {{ class_data.class_name }} {
 public:
     struct Row {
-        static constexpr int value_size = 8;
-        int cuid_{};
-        std::string character_name_{};
-        int max_level_{};
-        int cost_{};
-        CharacterType character_type_{};
-        ItemType item_type_{};
-        std::vector<std::string> requirement_quests_{};
-        std::vector<ItemType> requirement_items_{};
+        static constexpr int value_size = {{ class_data.value_size }};
+        {% for type_name, member in class_data.members %}{{ type_name }} {{ member }}_{};{% if not loop.last %}
+        {% endif %}{% endfor %}
     };
 
-    static const Row* get(const int& cuid) {
-        const auto it = _datas.find(cuid);
+    static const Row* get(const {{ class_data.key_type }}& {{ class_data.key_member }}) {
+        const auto it = _datas.find({{ class_data.key_member }});
         if (it == std::end(_datas)) {
             return nullptr;
         }
@@ -60,73 +54,23 @@ private:
     static void initialize(const std::vector<std::array<std::string, Row::value_size>>& rows) {
         for (const auto& row : rows) {
             _datas.emplace(std::piecewise_construct,
-                std::forward_as_tuple(std::stoi(row[0])),
+                std::forward_as_tuple({{ class_data.member_casters[0][0] }}row[0]{{ class_data.member_casters[0][1] }}),
                 std::forward_as_tuple(
-                    std::stoi(row[0]),
-                    row[1],
-                    std::stoi(row[2]),
-                    std::stoi(row[3]),
-                    static_cast<CharacterType>(std::stoi(row[4])),
-                    static_cast<ItemType>(std::stoi(row[5])),
-                    split<std::string>(row[6]),
-                    split<ItemType>(row[7])
+                    {% for caster_beg, caster_end in class_data.member_casters %}{{ caster_beg }}row[{{ loop.index0 }}]{{ caster_end }}{% if not loop.last %},
+                    {% endif %}{% endfor %}
                 ));
         }
     }
 
-    inline static std::unordered_map<int, Row> _datas{};
+    inline static std::unordered_map<{{ class_data.key_type }}, Row> _datas{};
 };
-
-// generated from TblItem.csv
-class TblItem {
-public:
-    struct Row {
-        static constexpr int value_size = 6;
-        std::string item_id_{};
-        std::string item_name_{};
-        ItemType item_type_{};
-        int item_level_{};
-        int cost_{};
-        int required_level_{};
-    };
-
-    static const Row* get(const std::string& item_id) {
-        const auto it = _datas.find(item_id);
-        if (it == std::end(_datas)) {
-            return nullptr;
-        }
-        return &it->second;
-    }
-
-private:
-    friend class TblLoader;
-
-    static void initialize(const std::vector<std::array<std::string, Row::value_size>>& rows) {
-        for (const auto& row : rows) {
-            _datas.emplace(std::piecewise_construct,
-                std::forward_as_tuple(row[0]),
-                std::forward_as_tuple(
-                    row[0],
-                    row[1],
-                    static_cast<ItemType>(std::stoi(row[2])),
-                    std::stoi(row[3]),
-                    std::stoi(row[4]),
-                    std::stoi(row[5])
-                ));
-        }
-    }
-
-    inline static std::unordered_map<std::string, Row> _datas{};
-};
-
+{% endfor %}
 class TblLoader {
 public:
     static bool initialize(const std::string& folderPath) {
-        
-        initialize<TblCharacter>(folderPath + "TblCharacter.csv");
-        
-        initialize<TblItem>(folderPath + "TblItem.csv");
-        
+        {% for class_data in classes %}
+        initialize<{{ class_data.class_name }}>(folderPath + "{{ class_data.file_name }}");
+        {% endfor %}
         return true;
     }
 
