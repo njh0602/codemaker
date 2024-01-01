@@ -16,7 +16,7 @@ def generate_type_from_csv(output_folder, folder_path):
                 'enum_values' : [enum_value[0] for enum_value in data]
             })
 
-    with open('./template/Types.tt', 'r') as file:
+    with open('./Templates/Types.tt', 'r') as file:
         template_content = file.read()
 
     template = Template(template_content)
@@ -26,216 +26,95 @@ def generate_type_from_csv(output_folder, folder_path):
         single_header_file.write(cpp_code)
 
 def generate_table_from_csv(output_folder, folder_path):
-    generate_path = os.path.join(output_folder, f"Tables.hpp")
+    
+    def convert_type_to_cpp(type_name, to_caster):
 
-    header_code = """// This file has been generated automatically. Don't modify it.
+        def is_valid_enum_type(enum_type):
+            if enum_type == 'string' or enum_type == 'int' or enum_type.startswith('list<'):
+                return False
+            return True
 
-#ifndef __TABLES_H__
-#define __TABLES_H__
+        def is_valid_normal_type(type_name):
+            if type_name == 'string' or type_name == 'int':
+                return True
+            return False
+    
+        # string 타입
+        if type_name == 'string':
+            return ('', '') if to_caster else 'std::string'
+    
+        # int 타입
+        elif type_name == 'int':
+            return ('std::stoi(', ')') if to_caster else 'int'
 
-#include <vector>
-#include <array>
-#include <unordered_map>
-#include <string>
-#include <sstream>
+        # list<enum<...>> 타입
+        elif 'list<enum<' in type_name and '>>' in type_name:
+            enum_type = re.search(r'list<enum<(.+?)>>', type_name).group(1)
+            if not is_valid_enum_type(enum_type):
+                return '<error_type>'
+            return (f'split<{enum_type}>(', ')') if to_caster else f'std::vector<{enum_type}>'
+        
+        # list<...> 타입
+        elif 'list<' in type_name and '>' in type_name:
+            list_type = re.search(r'list<(.+?)>', type_name).group(1)
+            if not is_valid_normal_type(list_type):
+                return '<error_type>'
+            return (f'split<{convert_type_to_cpp(list_type, to_caster = False)}>(', ')') if to_caster else f'std::vector<{convert_type_to_cpp(list_type, to_caster = False)}>'
 
-#include "Types.hpp"
-#include "csv.h"
+        # enum 타입
+        elif 'enum<' in type_name and '>' in type_name:
+            enum_type = re.search(r'enum<(.+?)>', type_name).group(1)
+            if not is_valid_enum_type(enum_type):
+                return '<error_type>'
+            return (f'static_cast<{enum_type}>(std::stoi(', '))') if to_caster else enum_type
+    
+        # 지원하지 않는 타입
+        return '<error_type>'
 
-template <typename T>
-static std::vector<T> split(const std::string& s, char delimiter = ',') {
-    std::vector<T> tokens;
-    std::istringstream ss(s);
-    std::string token;
-    while (std::getline(ss, token, delimiter)) {
-        std::istringstream converter(token);
-        T value;
-        if constexpr (std::is_enum_v<T>) {
-            value = static_cast<T>(std::stoi(token));
-        }
-        else {
-            converter >> value;
-        }
-        tokens.push_back(value);
-    }
-    return tokens;
-}\n
-"""
-
-    class_names = []
+    class_datas = []
     csv_files = [f for f in os.listdir(folder_path) if f.endswith('.csv')]
     for file_name in csv_files:
         file_path = os.path.join(folder_path, file_name)
-        class_name = os.path.splitext(file_name)[0]
-        class_names.append(class_name)
-
         with open(file_path, newline='') as csvfile:
             csv_reader = csv.reader(csvfile)
             data = list(csv_reader)
-            header_code += generate_table_class(data, file_name, class_name)
             
-        header_code += '\n'
+            type_names = data[1]
+            member_names = data[0]
 
-    header_code += 'class TblLoader {\n'
-    header_code += 'public:\n'
-    header_code += '    static bool initialize(const std::string& folderPath) {\n'
-    for class_name in class_names:
-        header_code += f'        initialize<{class_name}>(folderPath + "/{class_name}.csv");\n'
-    header_code += '        return true;\n'
-    header_code += '    }\n\n'
-    header_code += 'private:'
-    header_code += """
-    template<typename TblType>
-    static bool initialize(const std::string& path) {
-        csv2::Reader<
-            csv2::delimiter<','>, 
-            csv2::quote_character<'"'>, 
-            csv2::first_row_is_header<false>, 
-            csv2::trim_policy::trim_whitespace
-        > csv;
-        if (!csv.mmap(path)) {
-            return false;
-        }
-        std::vector<std::array<std::string, TblType::Row::value_size>> values{};
-        int rowcount{ 0 };
-        for (const auto& row : csv) {
-            if (rowcount++ < 2) {
-                continue;
-            }
-            std::array<std::string, TblType::Row::value_size> local;
-            int idx{ 0 };
-            for (const auto& cell : row) {
-                std::string value;
-                cell.read_value(value);
-                erase_if(value, [](char c) { return c == '\\r' || c == '"'; });
-                if (!value.empty()) {
-                    local[idx++] = value;
-                }
-            }
-            if (idx > 0) {
-                values.push_back(local);
-            }
-        }
-        TblType::initialize(values);
-        return true;
-    }
-"""
-    header_code += '};\n'
+            members = []
+            member_casters = []
+            for type_name, member_name in zip(type_names, member_names):
+                members.append((convert_type_to_cpp(type_name, to_caster = False), member_name))
+                member_casters.append(convert_type_to_cpp(type_name, to_caster = True))
 
-    header_code += '\n'
-    header_code += "#endif // __TABLES_H__"
+            class_datas.append({
+                'file_name': file_name, 
+                'class_name': os.path.splitext(file_name)[0],
+                'value_size': len(member_names),
+                'key_member': member_names[0],
+                'key_type': convert_type_to_cpp(type_names[0], to_caster = False),
+                'members': members,
+                'member_casters': member_casters
+        })
 
-    with open(generate_path, 'w') as single_header_file:
-        single_header_file.write(header_code)
+    with open('./Templates/Tables.tt', 'r') as file:
+        template_content = file.read()
 
-def generate_table_class(data, file_name, class_name):
-    members = data[0]
-    types = data[1]
+    template = Template(template_content)
+    cpp_code = template.render(classes=class_datas)
 
-    cpp_code = f'// generated from {file_name}\n'
-    cpp_code += f'class {class_name} {{\n'
-    cpp_code += 'public:\n'
-    cpp_code += '    struct Row {\n'
-    cpp_code += f'        static constexpr int value_size = {len(members)};\n\n'
-
-    key_member = ''
-    key_type = ''
-    is_first_column = True
-    for member, type_ in zip(members, types):
-        member_name = f"{member}_"
-        
-        if is_first_column:
-            key_member = member
-            key_type = type_
-
-        if type_ == 'int':
-            cpp_code += f"        int {member_name};"
-
-        elif type_ == 'string':
-            cpp_code += f"        std::string {member_name};"
-
-        elif 'list<enum<' in type_ and '>>' in type_:
-            enum_list_type = re.search(r'list<enum<(.+?)>>', type_).group(1)
-            cpp_code += f"        std::vector<{enum_list_type}> {member_name};"
-
-        elif 'list<' in type_ and '>' in type_:
-            list_type = re.search(r'list<(.+?)>', type_).group(1)
-            if list_type == 'string':
-                list_type = 'std::string'
-            
-            cpp_code += f"        std::vector<{list_type}> {member_name};"
-
-        elif 'enum<' in type_ and '>' in type_:
-            enum_type = re.search(r'enum<(.+?)>', type_).group(1)
-            cpp_code += f"        {enum_type} {member_name};"
-
-        if is_first_column:
-            key_member = member
-            key_type = type_
-            if type_ == 'string':
-                key_type = 'std::string'
-            
-            is_first_column = False
-            cpp_code += ' // key'
-        
-        cpp_code += '\n'
-
-    cpp_code += '    };\n\n'
-
-    cpp_code += f'    static const Row* get(const {key_type}& {key_member}) {{\n'
-    cpp_code += f'        const auto it = _datas.find({key_member});\n'
-    cpp_code += f'        if (it == std::end(_datas)) {{\n'
-    cpp_code += f'            return nullptr;\n'
-    cpp_code += f'        }}\n'
-    cpp_code += f'        return &it->second;\n'
-    cpp_code += f'    }}\n\n'
-
-    cpp_code += f'private:\n'
-    cpp_code += '    friend class TblLoader;\n\n'
-    cpp_code += '    static void initialize(const std::vector<std::array<std::string, Row::value_size>>& rows) {\n'
-    cpp_code += '        for (const auto& row : rows) {\n'
-    cpp_code += '            _datas.emplace(std::piecewise_construct,\n'
-    cpp_code += f'                std::forward_as_tuple('
-
-    if key_type == 'std::string':
-        cpp_code += "row[0]),\n"
-    elif key_type == 'int':
-        cpp_code += "std::stoi(row[0])),\n"
-
-    cpp_code += f'                std::forward_as_tuple(\n'
-    for i, (member, type_) in enumerate(zip(members, types)):
-        if type_ == 'string':
-            cpp_code += f"                    row[{i}]"
-        elif type_ == 'int':
-            cpp_code += f"                    std::stoi(row[{i}])"
-        elif 'list<enum<' in type_ and '>>' in type_:
-            enum_type = re.search(r'enum<(.+?)>', type_).group(1)
-            cpp_code += f"                    split<{enum_type}>(row[{i}])"
-        elif 'list<' in type_ and '>' in type_:
-            list_type = re.search(r'list<(.+?)>', type_).group(1)
-            if list_type == 'string':
-                list_type = 'std::string'
-            cpp_code += f"                    split<{list_type}>(row[{i}])"
-        elif 'enum<' in type_ and '>' in type_:
-            enum_type = re.search(r'enum<(.+?)>', type_).group(1)
-            cpp_code += f"                    static_cast<{enum_type}>(std::stoi(row[{i}]))"
-
-        if i != len(members) - 1:
-            cpp_code += ",\n"
-
-    cpp_code += '\n                ));\n'
-    cpp_code += '        }\n'
-    cpp_code += '    }\n\n'
-
-    cpp_code += f'    inline static std::unordered_map<{key_type}, Row> _datas{{}};\n'
-    cpp_code += f'}};\n'
-
-    return cpp_code
-
+    with open(os.path.join(output_folder, f"Tables.hpp"), 'w') as single_header_file:
+        single_header_file.write(cpp_code)
 
 def main():
+    # header생성 폴더경로
     output_folder = './generated/'
+
+    # table데이터 폴더경로
     tables_folder = './Tables/'
+
+    # type데이터 폴더경로
     types_folder = './Types/'
 
     if not os.path.exists(output_folder):
