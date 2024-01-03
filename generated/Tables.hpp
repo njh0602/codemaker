@@ -9,6 +9,9 @@
 #include <string>
 #include <sstream>
 #include <concepts>
+#include <functional>
+#include <execution>
+#include <atomic>
 
 #include "Types.hpp"
 #include "csv.h"
@@ -74,21 +77,26 @@ public:
 private:
     friend class TblLoader;
 
-    static void initialize(const std::vector<std::array<std::string, Row::value_size>>& rows) {
-        for (const auto& row : rows) {
-            _datas.emplace(std::piecewise_construct,
-                std::forward_as_tuple(std::stoi(row[0])),
-                std::forward_as_tuple(
-                    std::stoi(row[0]),
-                    row[1],
-                    std::stoi(row[2]),
-                    std::stoi(row[3]),
-                    static_cast<CharacterType>(std::stoi(row[4])),
-                    static_cast<ItemType>(std::stoi(row[5])),
-                    split<std::string>(row[6]),
-                    split<ItemType>(row[7])
-                ));
+    static bool initialize(const std::vector<std::array<std::string, Row::value_size>>& rows) {
+        try {
+            for (const auto& row : rows) {
+                _datas.emplace(std::piecewise_construct,
+                    std::forward_as_tuple(std::stoi(row[0])),
+                    std::forward_as_tuple(
+                        std::stoi(row[0]),
+                        row[1],
+                        std::stoi(row[2]),
+                        std::stoi(row[3]),
+                        static_cast<CharacterType>(std::stoi(row[4])),
+                        static_cast<ItemType>(std::stoi(row[5])),
+                        split<std::string>(row[6]),
+                        split<ItemType>(row[7])
+                    ));
+            }
+        } catch (...) {
+            return false;
         }
+        return true;
     }
 
     inline static std::unordered_map<int, Row> _datas{};
@@ -134,19 +142,24 @@ public:
 private:
     friend class TblLoader;
 
-    static void initialize(const std::vector<std::array<std::string, Row::value_size>>& rows) {
-        for (const auto& row : rows) {
-            _datas.emplace(std::piecewise_construct,
-                std::forward_as_tuple(row[0]),
-                std::forward_as_tuple(
-                    row[0],
-                    row[1],
-                    static_cast<ItemType>(std::stoi(row[2])),
-                    std::stoi(row[3]),
-                    std::stoi(row[4]),
-                    std::stoi(row[5])
-                ));
+    static bool initialize(const std::vector<std::array<std::string, Row::value_size>>& rows) {
+        try {
+            for (const auto& row : rows) {
+                _datas.emplace(std::piecewise_construct,
+                    std::forward_as_tuple(row[0]),
+                    std::forward_as_tuple(
+                        row[0],
+                        row[1],
+                        static_cast<ItemType>(std::stoi(row[2])),
+                        std::stoi(row[3]),
+                        std::stoi(row[4]),
+                        std::stoi(row[5])
+                    ));
+            }
+        } catch (...) {
+            return false;
         }
+        return true;
     }
 
     inline static std::unordered_map<std::string, Row> _datas{};
@@ -155,9 +168,16 @@ private:
 class TblLoader {
 public:
     static bool initialize(const std::string& folderPath) {
-        initialize<TblCharacter>(folderPath + "TblCharacter.csv");
-        initialize<TblItem>(folderPath + "TblItem.csv");
-        return true;
+        std::array<std::function<bool(const std::string&)>, 2> initFuncs {
+            [](const auto& folderPath) { return initialize<TblCharacter>(folderPath + "TblCharacter.csv"); },
+            [](const auto& folderPath) { return initialize<TblItem>(folderPath + "TblItem.csv"); }
+        };
+
+        std::atomic_int isSucceed{ 1 };
+        std::for_each(std::execution::par_unseq, std::begin(initFuncs), std::end(initFuncs), [&](auto func) {
+            isSucceed &= func(folderPath);
+        });
+        return isSucceed;
     }
 
 private:
@@ -192,8 +212,7 @@ private:
                 values.push_back(local);
             }
         }
-        TblType::initialize(values);
-        return true;
+        return TblType::initialize(values);
     }
 };
 
