@@ -36,7 +36,7 @@ class {{ class_data.class_name }} {
 public:
     struct Row {
         static constexpr int value_size = {{ class_data.value_size }};
-        {% for type_name, member in class_data.members %}{{ type_name }} {{ member }}_{};{% if not loop.last %}
+        {% for type_name, member in class_data.members %}{{ type_name }} {{ member }}_{};{% if loop.first %} // key{% endif %}{% if not loop.last %}
         {% endif %}{% endfor %}
     };
 
@@ -68,9 +68,8 @@ private:
 class TblLoader {
 public:
     static bool initialize(const std::string& folderPath) {
-        {% for class_data in classes %}
-        initialize<{{ class_data.class_name }}>(folderPath + "{{ class_data.file_name }}");
-        {% endfor %}
+        {% for class_data in classes %}initialize<{{ class_data.class_name }}>(folderPath + "{{ class_data.file_name }}");{% if not loop.last %}
+        {% endif %}{% endfor %}
         return true;
     }
 
