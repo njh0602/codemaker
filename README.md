@@ -80,6 +80,17 @@ int main()
         }
     }
 
+    // iterate through all elements.
+    TblCharacter::Foreach([](const auto& row) {
+        cout << row.character_name_ << endl;
+    });
+
+    // iterate until encountering false.
+    TblCharacter::While([](const auto& row) {
+        cout << row.character_name_ << endl;
+        return false;
+    });
+
     cout << "[[ TblItem ]]" << endl;
     auto d2 = TblItem::get("3");
     if (d2)
@@ -103,6 +114,17 @@ M16A2
 M16A4
 MP5SD
 MP7A2
+emily
+alexander
+sophia
+benjamin
+olivia
+william
+ava
+james
+liam
+isabella
+emily
 [[ TblItem ]]
 3
 300

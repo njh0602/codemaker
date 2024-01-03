@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <string>
 #include <sstream>
+#include <concepts>
 
 #include "Types.hpp"
 #include "csv.h"
@@ -54,6 +55,22 @@ public:
         return &it->second;
     }
 
+    template<typename Func> requires std::invocable<Func, Row> && std::same_as<std::invoke_result_t<Func, Row>, void>
+    static void Foreach(Func&& func) {
+        for (const auto& [_, row] : _datas) {
+            func(row);
+        }
+    }
+    
+    template<typename Func> requires std::invocable<Func, Row> && std::same_as<std::invoke_result_t<Func, Row>, bool>
+    static void While(Func&& func) {
+        for (const auto& [_, row] : _datas) {
+            if (!func(row)) {
+                break;
+            }
+        }
+    }
+
 private:
     friend class TblLoader;
 
@@ -96,6 +113,22 @@ public:
             return nullptr;
         }
         return &it->second;
+    }
+
+    template<typename Func> requires std::invocable<Func, Row> && std::same_as<std::invoke_result_t<Func, Row>, void>
+    static void Foreach(Func&& func) {
+        for (const auto& [_, row] : _datas) {
+            func(row);
+        }
+    }
+    
+    template<typename Func> requires std::invocable<Func, Row> && std::same_as<std::invoke_result_t<Func, Row>, bool>
+    static void While(Func&& func) {
+        for (const auto& [_, row] : _datas) {
+            if (!func(row)) {
+                break;
+            }
+        }
     }
 
 private:
