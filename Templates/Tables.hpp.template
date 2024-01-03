@@ -9,6 +9,9 @@
 #include <string>
 #include <sstream>
 #include <concepts>
+#include <functional>
+#include <execution>
+#include <atomic>
 
 #include "Types.hpp"
 #include "csv.h"
@@ -68,15 +71,20 @@ public:
 private:
     friend class TblLoader;
 
-    static void initialize(const std::vector<std::array<std::string, Row::value_size>>& rows) {
-        for (const auto& row : rows) {
-            _datas.emplace(std::piecewise_construct,
-                std::forward_as_tuple({{ class_data.member_casters[0][0] }}row[0]{{ class_data.member_casters[0][1] }}),
-                std::forward_as_tuple(
-                    {% for caster_beg, caster_end in class_data.member_casters %}{{ caster_beg }}row[{{ loop.index0 }}]{{ caster_end }}{% if not loop.last %},
-                    {% endif %}{% endfor %}
-                ));
+    static bool initialize(const std::vector<std::array<std::string, Row::value_size>>& rows) {
+        try {
+            for (const auto& row : rows) {
+                _datas.emplace(std::piecewise_construct,
+                    std::forward_as_tuple({{ class_data.member_casters[0][0] }}row[0]{{ class_data.member_casters[0][1] }}),
+                    std::forward_as_tuple(
+                        {% for caster_beg, caster_end in class_data.member_casters %}{{ caster_beg }}row[{{ loop.index0 }}]{{ caster_end }}{% if not loop.last %},
+                        {% endif %}{% endfor %}
+                    ));
+            }
+        } catch (...) {
+            return false;
         }
+        return true;
     }
 
     inline static std::unordered_map<{{ class_data.key_type }}, Row> _datas{};
@@ -85,9 +93,16 @@ private:
 class TblLoader {
 public:
     static bool initialize(const std::string& folderPath) {
-        {% for class_data in classes %}initialize<{{ class_data.class_name }}>(folderPath + "{{ class_data.file_name }}");{% if not loop.last %}
-        {% endif %}{% endfor %}
-        return true;
+        std::array<std::function<bool(const std::string&)>, {{classes|length}}> initFuncs {
+            {% for class_data in classes %}[](const auto& folderPath) { return initialize<{{ class_data.class_name }}>(folderPath + "{{ class_data.file_name }}"); }{% if not loop.last %},
+            {% endif %}{% endfor %}
+        };
+
+        std::atomic_int isSucceed{ 1 };
+        std::for_each(std::execution::par_unseq, std::begin(initFuncs), std::end(initFuncs), [&](auto func) {
+            isSucceed &= func(folderPath);
+        });
+        return isSucceed;
     }
 
 private:
@@ -122,8 +137,7 @@ private:
                 values.push_back(local);
             }
         }
-        TblType::initialize(values);
-        return true;
+        return TblType::initialize(values);
     }
 };
 
