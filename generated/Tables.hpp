@@ -36,7 +36,7 @@ class TblCharacter {
 public:
     struct Row {
         static constexpr int value_size = 8;
-        int cuid_{};
+        int cuid_{}; // key
         std::string character_name_{};
         int max_level_{};
         int cost_{};
@@ -82,7 +82,7 @@ class TblItem {
 public:
     struct Row {
         static constexpr int value_size = 6;
-        std::string item_id_{};
+        std::string item_id_{}; // key
         std::string item_name_{};
         ItemType item_type_{};
         int item_level_{};
@@ -122,11 +122,8 @@ private:
 class TblLoader {
 public:
     static bool initialize(const std::string& folderPath) {
-        
         initialize<TblCharacter>(folderPath + "TblCharacter.csv");
-        
         initialize<TblItem>(folderPath + "TblItem.csv");
-        
         return true;
     }
 
