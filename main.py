@@ -16,7 +16,7 @@ def generate_type_from_csv(output_folder, folder_path):
                 'enum_values' : [enum_value[0] for enum_value in data]
             })
 
-    with open('./Templates/Types.tt', 'r') as file:
+    with open('./Templates/Types.hpp.template', 'r') as file:
         template_content = file.read()
 
     template = Template(template_content)
@@ -98,7 +98,7 @@ def generate_table_from_csv(output_folder, folder_path):
                 'member_casters': member_casters
         })
 
-    with open('./Templates/Tables.tt', 'r') as file:
+    with open('./Templates/Tables.hpp.template', 'r') as file:
         template_content = file.read()
 
     template = Template(template_content)
