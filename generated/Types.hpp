@@ -7,11 +7,18 @@
 #include <unordered_map>
 
 template<typename T>
-struct EnumConverter;
+struct enum_converter;
 
-static const std::string EmptyString{};
+template<typename T> 
+std::string enum_str(T value);
+
+template<typename T> 
+T enum_value(const std::string& str);
+
+static const std::string k_empty_str;
 
 // Generated from CharacterType.csv
+
 enum class CharacterType {
     e_emily = 0,
     e_alexander = 1,
@@ -25,9 +32,9 @@ enum class CharacterType {
     e_isabella = 9
 };
 
-template<> struct EnumConverter<CharacterType> {
-    static CharacterType fromString(const std::string& str) {
-        static const std::unordered_map<std::string, CharacterType> enumMap {
+template<> struct enum_converter<CharacterType> {
+    static CharacterType enum_value(const std::string& str) {
+        static const std::unordered_map<std::string, CharacterType> enum_table {
             {"e_emily", CharacterType::e_emily},
             {"e_alexander", CharacterType::e_alexander},
             {"e_sophia", CharacterType::e_sophia},
@@ -39,15 +46,15 @@ template<> struct EnumConverter<CharacterType> {
             {"e_liam", CharacterType::e_liam},
             {"e_isabella", CharacterType::e_isabella},
         };
-        auto it = enumMap.find(str);
-        if (it == enumMap.end()) {
+        auto it = enum_table.find(str);
+        if (it == enum_table.end()) {
             return CharacterType{};
         }
         return it->second;
     }
 
-    static const std::string& toString(CharacterType enumValue) {
-        static const std::unordered_map<CharacterType, std::string> strMap {
+    static const std::string& enum_str(CharacterType value) {
+        static const std::unordered_map<CharacterType, std::string> str_map {
             { CharacterType::e_emily, "e_emily"},
             { CharacterType::e_alexander, "e_alexander"},
             { CharacterType::e_sophia, "e_sophia"},
@@ -59,15 +66,28 @@ template<> struct EnumConverter<CharacterType> {
             { CharacterType::e_liam, "e_liam"},
             { CharacterType::e_isabella, "e_isabella"},
         };
-        auto it = strMap.find(enumValue);
-        if (it == strMap.end()) {
-            return EmptyString;
+        auto it = str_map.find(value);
+        if (it == str_map.end()) {
+            return k_empty_str;
         }
         return it->second;
     }
 };
 
+
+// helper functions
+template<> 
+inline std::string enum_str<CharacterType>(CharacterType value) {
+    return enum_converter<CharacterType>::enum_str(value);
+}
+
+template<>
+inline CharacterType enum_value<CharacterType>(const std::string& str) {
+     return enum_converter<CharacterType>::enum_value(str);
+}
+
 // Generated from ItemType.csv
+namespace Game { 
 enum class ItemType {
     MK18_MOD1 = 0,
     AK47 = 1,
@@ -89,9 +109,9 @@ enum class ItemType {
     Ruger_Mini14 = 17
 };
 
-template<> struct EnumConverter<ItemType> {
-    static ItemType fromString(const std::string& str) {
-        static const std::unordered_map<std::string, ItemType> enumMap {
+template<> struct enum_converter<ItemType> {
+    static ItemType enum_value(const std::string& str) {
+        static const std::unordered_map<std::string, ItemType> enum_table {
             {"MK18_MOD1", ItemType::MK18_MOD1},
             {"AK47", ItemType::AK47},
             {"AK74U", ItemType::AK74U},
@@ -111,15 +131,15 @@ template<> struct EnumConverter<ItemType> {
             {"HK_G36", ItemType::HK_G36},
             {"Ruger_Mini14", ItemType::Ruger_Mini14},
         };
-        auto it = enumMap.find(str);
-        if (it == enumMap.end()) {
+        auto it = enum_table.find(str);
+        if (it == enum_table.end()) {
             return ItemType{};
         }
         return it->second;
     }
 
-    static const std::string& toString(ItemType enumValue) {
-        static const std::unordered_map<ItemType, std::string> strMap {
+    static const std::string& enum_str(ItemType value) {
+        static const std::unordered_map<ItemType, std::string> str_map {
             { ItemType::MK18_MOD1, "MK18_MOD1"},
             { ItemType::AK47, "AK47"},
             { ItemType::AK74U, "AK74U"},
@@ -139,12 +159,93 @@ template<> struct EnumConverter<ItemType> {
             { ItemType::HK_G36, "HK_G36"},
             { ItemType::Ruger_Mini14, "Ruger_Mini14"},
         };
-        auto it = strMap.find(enumValue);
-        if (it == strMap.end()) {
-            return EmptyString;
+        auto it = str_map.find(value);
+        if (it == str_map.end()) {
+            return k_empty_str;
         }
         return it->second;
     }
 };
+} // namespace Game 
+
+// helper functions
+template<> 
+inline std::string enum_str<Game::ItemType>(Game::ItemType value) {
+    return enum_converter<Game::ItemType>::enum_str(value);
+}
+
+template<>
+inline Game::ItemType enum_value<Game::ItemType>(const std::string& str) {
+     return enum_converter<Game::ItemType>::enum_value(str);
+}
+
+// Generated from CharacterType2.csv
+namespace Game::Entity { 
+enum class CharacterType2 {
+    e_emily = 0,
+    e_alexander = 1,
+    e_sophia = 2,
+    e_benjamin = 3,
+    e_olivia = 4,
+    e_william = 5,
+    e_ava = 6,
+    e_james = 7,
+    e_liam = 8,
+    e_isabella = 9
+};
+
+template<> struct enum_converter<CharacterType2> {
+    static CharacterType2 enum_value(const std::string& str) {
+        static const std::unordered_map<std::string, CharacterType2> enum_table {
+            {"e_emily", CharacterType2::e_emily},
+            {"e_alexander", CharacterType2::e_alexander},
+            {"e_sophia", CharacterType2::e_sophia},
+            {"e_benjamin", CharacterType2::e_benjamin},
+            {"e_olivia", CharacterType2::e_olivia},
+            {"e_william", CharacterType2::e_william},
+            {"e_ava", CharacterType2::e_ava},
+            {"e_james", CharacterType2::e_james},
+            {"e_liam", CharacterType2::e_liam},
+            {"e_isabella", CharacterType2::e_isabella},
+        };
+        auto it = enum_table.find(str);
+        if (it == enum_table.end()) {
+            return CharacterType2{};
+        }
+        return it->second;
+    }
+
+    static const std::string& enum_str(CharacterType2 value) {
+        static const std::unordered_map<CharacterType2, std::string> str_map {
+            { CharacterType2::e_emily, "e_emily"},
+            { CharacterType2::e_alexander, "e_alexander"},
+            { CharacterType2::e_sophia, "e_sophia"},
+            { CharacterType2::e_benjamin, "e_benjamin"},
+            { CharacterType2::e_olivia, "e_olivia"},
+            { CharacterType2::e_william, "e_william"},
+            { CharacterType2::e_ava, "e_ava"},
+            { CharacterType2::e_james, "e_james"},
+            { CharacterType2::e_liam, "e_liam"},
+            { CharacterType2::e_isabella, "e_isabella"},
+        };
+        auto it = str_map.find(value);
+        if (it == str_map.end()) {
+            return k_empty_str;
+        }
+        return it->second;
+    }
+};
+} // namespace Game::Entity 
+
+// helper functions
+template<> 
+inline std::string enum_str<Game::Entity::CharacterType2>(Game::Entity::CharacterType2 value) {
+    return enum_converter<Game::Entity::CharacterType2>::enum_str(value);
+}
+
+template<>
+inline Game::Entity::CharacterType2 enum_value<Game::Entity::CharacterType2>(const std::string& str) {
+     return enum_converter<Game::Entity::CharacterType2>::enum_value(str);
+}
 
 #endif // __TYPES_H__

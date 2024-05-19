@@ -36,6 +36,7 @@ static std::vector<T> split(const std::string& s, char delimiter = ',') {
 }
 {% for class_data in classes %}
 // generated from {{ class_data.file_name }}
+{% if class_data.namespace %}namespace {{ class_data.namespace }} { {% endif %}
 class {{ class_data.class_name }} {
 public:
     struct Row {
@@ -53,14 +54,14 @@ public:
     }
 
     template<typename Func> requires std::invocable<Func, Row> && std::same_as<std::invoke_result_t<Func, Row>, void>
-    static void Foreach(Func&& func) {
+    static void foreach(Func&& func) {
         for (const auto& [_, row] : _datas) {
             func(row);
         }
     }
     
     template<typename Func> requires std::invocable<Func, Row> && std::same_as<std::invoke_result_t<Func, Row>, bool>
-    static void While(Func&& func) {
+    static void do_while(Func&& func) {
         for (const auto& [_, row] : _datas) {
             if (!func(row)) {
                 break;
@@ -89,20 +90,21 @@ private:
 
     inline static std::unordered_map<{{ class_data.key_type }}, Row> _datas{};
 };
+{% if class_data.namespace %}} // namespace {{ class_data.namespace }} {% endif %}
 {% endfor %}
 class TblLoader {
 public:
-    static bool initialize(const std::string& folderPath) {
-        std::array<std::function<bool(const std::string&)>, {{classes|length}}> initFuncs {
-            {% for class_data in classes %}[](const auto& folderPath) { return initialize<{{ class_data.class_name }}>(folderPath + "{{ class_data.file_name }}"); }{% if not loop.last %},
+    static bool initialize(const std::string& folder_path) {
+        std::array<std::function<bool(const std::string&)>, {{classes|length}}> init_funcs{
+            {% for class_data in classes %}[](const auto& folder_path) { return initialize<{% if class_data.namespace %}{{ class_data.namespace }}::{% endif %}{{ class_data.class_name }}>(folder_path + "{% if class_data.namespace %}{% for ns in class_data.namespace.split("::") %}{{ ns }}/{% endfor %}{% endif %}{{ class_data.file_name }}"); }{% if not loop.last %},
             {% endif %}{% endfor %}
         };
 
-        std::atomic_int isSucceed{ 1 };
-        std::for_each(std::execution::par_unseq, std::begin(initFuncs), std::end(initFuncs), [&](auto func) {
-            isSucceed &= func(folderPath);
+        std::atomic_int is_succeed{ 1 };
+        std::for_each(std::execution::par_unseq, std::begin(init_funcs), std::end(init_funcs), [&](auto func) {
+            is_succeed &= func(folder_path);
         });
-        return isSucceed;
+        return is_succeed;
     }
 
 private:

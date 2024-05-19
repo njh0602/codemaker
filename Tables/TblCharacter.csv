@@ -1,5 +1,5 @@
 cuid,character_name,max_level,cost,character_type,item_type,requirement_quests,requirement_items
-int,string,int,int,enum<CharacterType>,enum<ItemType>,list<string>,list<enum<ItemType>>
+int,string,int,int,enum<CharacterType>,enum<Game::ItemType>,list<string>,list<enum<Game::ItemType>>
 1,emily,50,100,1,1,"1,2,3,4,5,6","1,2,3,4,5,6"
 2,alexander,55,200,2,2,"1,2,3,4,5,7","1,2,3,4,5,7"
 3,sophia,60,300,3,3,"1,2,3,4,5,8","1,2,3,4,5,8"

@@ -57,78 +57,47 @@ The following CSV file will be generated into the following C++ code.
 
 The script generates complex C++ code, but its usage is incredibly simple, as shown below.
 ```cpp
-#include "./generated/Tables.hpp"
-
 #include <iostream>
-using namespace std;
+
+#include "generated/Tables.hpp"
+#include "generated/Types.hpp"
+using std::cout;
+using std::endl;
 
 int main()
 {
-    // CSV table data root path
-    TblLoader::initialize("codemaker/Tables/");
+	if (TblLoader::initialize("Tables/") == false)
+	{
+		std::cout << "error" << std::endl;
+	}
 
-    cout << "[[ TblCharacter ]]" << endl;
-    auto* d1 = TblCharacter::get(1);
-    if (d1)
-    {
-        cout << d1->character_name_ << endl; // "emily"
-        cout << d1->max_level_ << endl; // 50
-        cout << d1->cost_ << endl; // 100
-        for (const auto& item : d1->requirement_items_)
-        {
-            cout << EnumConverter<ItemType>::toString(item) << endl;
-        }
-    }
+	std::cout << enum_str(CharacterType::e_alexander) << std::endl; // e_alexander
+	std::cout << static_cast<int>(enum_value<CharacterType>("e_alexander")) << std::endl; // 1
 
-    // iterate through all elements.
-    TblCharacter::Foreach([](const auto& row) {
-        cout << row.character_name_ << endl;
-    });
+	cout << TblCharacter::get(1)->character_name_ << endl; // emily
+	if (auto p = TblCharacter::get(14); p != nullptr)
+	{
+		cout << enum_str(p->item_type_) << endl; // no display
+	}
+	if (auto p = TblCharacter::get(1); p != nullptr)
+	{
+		cout << enum_str(p->item_type_) << endl; // AK47
+	}
 
-    // iterate until encountering false.
-    TblCharacter::While([](const auto& row) {
-        cout << row.character_name_ << endl;
-        return false;
-    });
-
-    cout << "[[ TblItem ]]" << endl;
-    auto d2 = TblItem::get("3");
-    if (d2)
-    {
-        cout << d2->cost_ << endl; // 3
-        cout << d2->item_level_ << endl; // 300
-        cout << d2->item_name_ << endl; // potion
-    }
+	if (auto p = Game::TblItem2::get("1"); p != nullptr)
+	{
+		cout << p->item_name_ << endl; // sword
+	}
 }
 ```
 
 output:
 ```
-[[ TblCharacter ]]
+e_alexander
+1
 emily
-50
-100
 AK47
-AK74U
-M16A2
-M16A4
-MP5SD
-MP7A2
-emily
-alexander
-sophia
-benjamin
-olivia
-william
-ava
-james
-liam
-isabella
-emily
-[[ TblItem ]]
-3
-300
-potion
+sword
 ```
 
 # Note
