@@ -17,17 +17,12 @@ def generate_type_from_csv(output_folder, folder_path):
             file_path = os.path.join(root, file_name)
             with open(file_path, newline='') as csvfile:
                 csv_reader = csv.reader(csvfile)
-                data = list(csv_reader)
                 enum_values = []
-                for enum_value in data:
-                    # Comma-separated value; handle optional integer value
-                    if len(enum_value) > 1:
-                        name = enum_value[0].strip()
-                        value = enum_value[1].strip()
+                for row in csv_reader:
+                    if row:  # 빈 줄 무시
+                        name = row[0].strip()
+                        value = row[1].strip() if len(row) > 1 else None
                         enum_values.append((name, value))
-                    else:
-                        name = enum_value[0].strip()
-                        enum_values.append((name, None))
                 
                 enum_datas.append({
                     'file_name': file_name,
