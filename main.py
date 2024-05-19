@@ -18,10 +18,21 @@ def generate_type_from_csv(output_folder, folder_path):
             with open(file_path, newline='') as csvfile:
                 csv_reader = csv.reader(csvfile)
                 data = list(csv_reader)
+                enum_values = []
+                for enum_value in data:
+                    # Comma-separated value; handle optional integer value
+                    if len(enum_value) > 1:
+                        name = enum_value[0].strip()
+                        value = enum_value[1].strip()
+                        enum_values.append((name, value))
+                    else:
+                        name = enum_value[0].strip()
+                        enum_values.append((name, None))
+                
                 enum_datas.append({
                     'file_name': file_name,
                     'enum_name': os.path.splitext(file_name)[0],
-                    'enum_values': [enum_value[0] for enum_value in data],
+                    'enum_values': enum_values,
                     'namespace': get_namespace_from_path(os.path.relpath(root, start=folder_path))
                 })
 

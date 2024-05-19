@@ -20,14 +20,14 @@ static const std::string k_empty_str;
 // Generated from {{ enum_data.file_name }}
 {% if enum_data.namespace %}namespace {{ enum_data.namespace }} { {% endif %}
 enum class {{ enum_data.enum_name }} {
-    {% for enum_value in enum_data.enum_values %}{{ enum_value }} = {{ loop.index0 }}{% if not loop.last %},
+    {% for enum_value, enum_default in enum_data.enum_values %}{{ enum_value }}{% if enum_default %} = {{ enum_default }}{% endif %}{% if not loop.last %},
     {% endif %}{% endfor %}
 };
 
 template<> struct enum_converter<{{ enum_data.enum_name }}> {
     static {{ enum_data.enum_name }} enum_value(const std::string& str) {
         static const std::unordered_map<std::string, {{ enum_data.enum_name }}> enum_table {
-            {% for enum_value in enum_data.enum_values %}{"{{ enum_value }}", {{ enum_data.enum_name }}::{{ enum_value }}},{% if not loop.last %}
+            {% for enum_value, _ in enum_data.enum_values %}{"{{ enum_value }}", {{ enum_data.enum_name }}::{{ enum_value }}},{% if not loop.last %}
             {% endif %}{% endfor %}
         };
         auto it = enum_table.find(str);
@@ -39,7 +39,7 @@ template<> struct enum_converter<{{ enum_data.enum_name }}> {
 
     static const std::string& enum_str({{ enum_data.enum_name }} value) {
         static const std::unordered_map<{{ enum_data.enum_name }}, std::string> str_map {
-            {% for enum_value in enum_data.enum_values %}{ {{ enum_data.enum_name }}::{{ enum_value }}, "{{ enum_value }}"},{% if not loop.last %}
+            {% for enum_value, _ in enum_data.enum_values %}{ {{ enum_data.enum_name }}::{{ enum_value }}, "{{ enum_value }}"},{% if not loop.last %}
             {% endif %}{% endfor %}
         };
         auto it = str_map.find(value);

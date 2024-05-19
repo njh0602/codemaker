@@ -20,16 +20,16 @@ static const std::string k_empty_str;
 // Generated from CharacterType.csv
 
 enum class CharacterType {
-    e_emily = 0,
-    e_alexander = 1,
-    e_sophia = 2,
-    e_benjamin = 3,
-    e_olivia = 4,
-    e_william = 5,
-    e_ava = 6,
-    e_james = 7,
-    e_liam = 8,
-    e_isabella = 9
+    e_emily = 1,
+    e_alexander,
+    e_sophia,
+    e_benjamin,
+    e_olivia = 1000,
+    e_william,
+    e_ava,
+    e_james = 2000,
+    e_liam,
+    e_isabella = 3000
 };
 
 template<> struct enum_converter<CharacterType> {
@@ -75,8 +75,7 @@ template<> struct enum_converter<CharacterType> {
 };
 
 
-// helper functions
-template<> 
+template<>
 inline std::string enum_str<CharacterType>(CharacterType value) {
     return enum_converter<CharacterType>::enum_str(value);
 }
@@ -89,24 +88,24 @@ inline CharacterType enum_value<CharacterType>(const std::string& str) {
 // Generated from ItemType.csv
 namespace Game { 
 enum class ItemType {
-    MK18_MOD1 = 0,
-    AK47 = 1,
-    AK74U = 2,
-    M16A2 = 3,
-    M16A4 = 4,
-    MP5SD = 5,
-    MP7A2 = 6,
-    GLOCK19 = 7,
-    Remington700 = 8,
-    FN_SCARL = 9,
-    FN_SCARH = 10,
-    SIG_Sauer_P226 = 11,
-    Beretta_M9 = 12,
-    Mossberg500 = 13,
-    Winchester_Model_70 = 14,
-    Steyr_AUG = 15,
-    HK_G36 = 16,
-    Ruger_Mini14 = 17
+    MK18_MOD1,
+    AK47,
+    AK74U,
+    M16A2,
+    M16A4,
+    MP5SD,
+    MP7A2,
+    GLOCK19,
+    Remington700,
+    FN_SCARL,
+    FN_SCARH,
+    SIG_Sauer_P226,
+    Beretta_M9,
+    Mossberg500,
+    Winchester_Model_70,
+    Steyr_AUG,
+    HK_G36,
+    Ruger_Mini14
 };
 
 template<> struct enum_converter<ItemType> {
@@ -168,8 +167,7 @@ template<> struct enum_converter<ItemType> {
 };
 } // namespace Game 
 
-// helper functions
-template<> 
+template<>
 inline std::string enum_str<Game::ItemType>(Game::ItemType value) {
     return enum_converter<Game::ItemType>::enum_str(value);
 }
@@ -182,16 +180,16 @@ inline Game::ItemType enum_value<Game::ItemType>(const std::string& str) {
 // Generated from CharacterType2.csv
 namespace Game::Entity { 
 enum class CharacterType2 {
-    e_emily = 0,
-    e_alexander = 1,
-    e_sophia = 2,
-    e_benjamin = 3,
-    e_olivia = 4,
-    e_william = 5,
-    e_ava = 6,
-    e_james = 7,
-    e_liam = 8,
-    e_isabella = 9
+    e_emily,
+    e_alexander,
+    e_sophia,
+    e_benjamin,
+    e_olivia,
+    e_william,
+    e_ava,
+    e_james,
+    e_liam,
+    e_isabella
 };
 
 template<> struct enum_converter<CharacterType2> {
@@ -237,8 +235,7 @@ template<> struct enum_converter<CharacterType2> {
 };
 } // namespace Game::Entity 
 
-// helper functions
-template<> 
+template<>
 inline std::string enum_str<Game::Entity::CharacterType2>(Game::Entity::CharacterType2 value) {
     return enum_converter<Game::Entity::CharacterType2>::enum_str(value);
 }
