@@ -13,6 +13,8 @@ def generate_type_from_csv(output_folder, folder_path):
 
     for root, _, files in os.walk(folder_path):
         csv_files = [f for f in files if f.endswith('.csv')]
+        if not csv_files:  # csv_files가 비어 있으면 함수 종료
+            return
         for file_name in csv_files:
             file_path = os.path.join(root, file_name)
             with open(file_path, newline='') as csvfile:
@@ -90,6 +92,8 @@ def generate_table_from_csv(output_folder, folder_path):
     
     for root, _, files in os.walk(folder_path):
         csv_files = [f for f in files if f.endswith('.csv')]
+        if not csv_files:  # csv_files가 비어 있으면 함수 종료
+            return
         for file_name in csv_files:
             file_path = os.path.join(root, file_name)
             with open(file_path, newline='') as csvfile:
