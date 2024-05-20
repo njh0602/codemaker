@@ -1,3 +1,4 @@
+import json
 from jinja2 import Template
 import os
 import csv
@@ -130,14 +131,12 @@ def generate_table_from_csv(output_folder, folder_path):
         single_header_file.write(cpp_code)
 
 def main():
-    # header 생성 폴더 경로
-    output_folder = './generated/'
+    with open('./config.json', 'r') as config_file:
+        config = json.load(config_file)
 
-    # table 데이터 폴더 경로
-    tables_folder = './Tables/'
-
-    # type 데이터 폴더 경로
-    types_folder = './Types/'
+    output_folder = config['output_folder']
+    tables_folder = config['tables_folder']
+    types_folder = config['types_folder']
 
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)

@@ -1,0 +1,5 @@
+{
+    "output_folder": "./generated/",
+    "tables_folder": "./Tables/",
+    "types_folder": "./Types/"   
+}
