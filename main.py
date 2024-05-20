@@ -4,6 +4,8 @@ import os
 import csv
 import re
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
 def get_namespace_from_path(path):
     parts = path.split(os.sep)
     namespace = '::'.join(parts)
@@ -34,7 +36,8 @@ def generate_type_from_csv(output_folder, folder_path):
                     'namespace': get_namespace_from_path(os.path.relpath(root, start=folder_path))
                 })
 
-    with open('./Templates/Types.hpp.template', 'r') as file:
+    template_path = os.path.join(script_dir, 'Templates/Types.hpp.template')
+    with open(template_path, 'r') as file:
         template_content = file.read()
 
     template = Template(template_content)
@@ -121,7 +124,8 @@ def generate_table_from_csv(output_folder, folder_path):
                     'namespace': get_namespace_from_path(os.path.relpath(root, start=folder_path))
             })
 
-    with open('./Templates/Tables.hpp.template', 'r') as file:
+    template_path = os.path.join(script_dir, 'Templates/Tables.hpp.template')
+    with open(template_path, 'r') as file:
         template_content = file.read()
 
     template = Template(template_content)
@@ -131,7 +135,9 @@ def generate_table_from_csv(output_folder, folder_path):
         single_header_file.write(cpp_code)
 
 def main():
-    with open('./config.json', 'r') as config_file:
+    config_path = os.path.join(script_dir, 'config.json')
+    
+    with open(config_path, 'r') as config_file:
         config = json.load(config_file)
 
     output_folder = config['output_folder']
