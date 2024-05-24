@@ -39,7 +39,7 @@ def generate_type_from_csv(output_folder, folder_path):
                         raise ValueError(f"Duplicate enum_value_name found, enum_value_name={enum_value_name}, file_name={file_name}")
 
                     value = row[1].strip() if len(row) > 1 else None
-                    if value is None:
+                    if not value: # None이거나 빈 문자열일 경우
                         if previous_value == -1:
                             value = "0"
                         else:
