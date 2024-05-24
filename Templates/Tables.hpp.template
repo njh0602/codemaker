@@ -1,7 +1,7 @@
 // This file has been generated automatically. Don't modify it.
 
-#ifndef __TABLES_H__
-#define __TABLES_H__
+#ifndef __GENERATED_TABLES_H__
+#define __GENERATED_TABLES_H__
 
 #include <vector>
 #include <array>
@@ -13,8 +13,8 @@
 #include <execution>
 #include <atomic>
 
-#include "Types.hpp"
-#include "csv.h"
+#include "./types.hpp"
+#include "./csv.h"
 
 template <typename T>
 static std::vector<T> split(const std::string& s, char delimiter = ',') {
@@ -102,7 +102,11 @@ public:
 
         std::atomic_int is_succeed{ 1 };
         std::for_each(std::execution::par_unseq, std::begin(init_funcs), std::end(init_funcs), [&](auto func) {
-            is_succeed &= func(folder_path);
+            try {
+                is_succeed &= func(folder_path);
+            } catch (...){
+                is_succeed = 0;
+            }
         });
         return is_succeed;
     }
@@ -143,4 +147,4 @@ private:
     }
 };
 
-#endif // __TABLES_H__
+#endif // __GENERATED_TABLES_H__

@@ -1,13 +1,17 @@
 // This file has been generated automatically. Don't modify it.
 
-#ifndef __TYPES_H__
-#define __TYPES_H__
+#ifndef __GENERATED_TYPES_H__
+#define __GENERATED_TYPES_H__
 
+#include <array>
 #include <string>
 #include <unordered_map>
 
 template<typename T>
-struct enum_converter;
+struct enum_helpers;
+
+template<typename T>
+inline constexpr std::size_t enum_count = 0;
 
 template<typename T> 
 std::string enum_str(T value);
@@ -15,31 +19,43 @@ std::string enum_str(T value);
 template<typename T> 
 T enum_value(const std::string& str);
 
+template<typename T>
+const std::array<T, enum_count<T>>& enum_values();
+
+template<typename T>
+bool is_valid_enum(T value);
+
+template<typename T>
+bool is_valid_enum(const std::string& str);
+
+template<typename T>
+bool is_valid_enum(int value);
+
 static const std::string k_empty_str;
 {% for enum_data in enums %}
 // Generated from {{ enum_data.file_name }}
 {% if enum_data.namespace %}namespace {{ enum_data.namespace }} { {% endif %}
 enum class {{ enum_data.enum_name }} {
-    {% for enum_value, enum_default in enum_data.enum_values %}{{ enum_value }}{% if enum_default %} = {{ enum_default }}{% endif %}{% if not loop.last %},
+    {% for enum_name, enum_value, comment in enum_data.enum_values %}{{ enum_name }} = {{ enum_value }}{% if not loop.last %}, {{comment}}
     {% endif %}{% endfor %}
 };
 
-template<> struct enum_converter<{{ enum_data.enum_name }}> {
+template<> struct enum_helpers<{{ enum_data.enum_name }}> {
     static {{ enum_data.enum_name }} enum_value(const std::string& str) {
         static const std::unordered_map<std::string, {{ enum_data.enum_name }}> enum_table {
-            {% for enum_value, _ in enum_data.enum_values %}{"{{ enum_value }}", {{ enum_data.enum_name }}::{{ enum_value }}},{% if not loop.last %}
+            {% for enum_value, _, _ in enum_data.enum_values %}{"{{ enum_value }}", {{ enum_data.enum_name }}::{{ enum_value }}},{% if not loop.last %}
             {% endif %}{% endfor %}
         };
         auto it = enum_table.find(str);
         if (it == enum_table.end()) {
-            return {{ enum_data.enum_name }}{};
+            return {{ enum_data.enum_name }}::e_invalid;
         }
         return it->second;
     }
 
     static const std::string& enum_str({{ enum_data.enum_name }} value) {
         static const std::unordered_map<{{ enum_data.enum_name }}, std::string> str_map {
-            {% for enum_value, _ in enum_data.enum_values %}{ {{ enum_data.enum_name }}::{{ enum_value }}, "{{ enum_value }}"},{% if not loop.last %}
+            {% for enum_value, _, _ in enum_data.enum_values %}{ {{ enum_data.enum_name }}::{{ enum_value }}, "{{ enum_value }}"},{% if not loop.last %}
             {% endif %}{% endfor %}
         };
         auto it = str_map.find(value);
@@ -48,17 +64,50 @@ template<> struct enum_converter<{{ enum_data.enum_name }}> {
         }
         return it->second;
     }
+
+    static const std::array<{{ enum_data.enum_name }}, {{enum_data.enum_count}}>& enum_values() {
+        static const std::array<{{ enum_data.enum_name }}, {{enum_data.enum_count}}> enums {
+            {% for enum_value, _, _ in enum_data.enum_values %}{% if loop.index == 1 %}// {% endif %}{{ enum_data.enum_name }}::{{ enum_value }},{% if not loop.last %}
+            {% endif %}{% endfor %}
+        };
+        return enums;
+    }
 };
 {% if enum_data.namespace %}} // namespace {{ enum_data.namespace }} {% endif %}
 
 template<>
+inline constexpr std::size_t enum_count<{% if enum_data.namespace %}{{ enum_data.namespace }}::{% endif %}{{ enum_data.enum_name }}> = {{enum_data.enum_count}};
+
+template<>
 inline std::string enum_str<{% if enum_data.namespace %}{{ enum_data.namespace }}::{% endif %}{{ enum_data.enum_name }}>({% if enum_data.namespace %}{{ enum_data.namespace }}::{% endif %}{{ enum_data.enum_name }} value) {
-    return enum_converter<{% if enum_data.namespace %}{{ enum_data.namespace }}::{% endif %}{{ enum_data.enum_name }}>::enum_str(value);
+    return enum_helpers<{% if enum_data.namespace %}{{ enum_data.namespace }}::{% endif %}{{ enum_data.enum_name }}>::enum_str(value);
 }
 
 template<>
 inline {% if enum_data.namespace %}{{ enum_data.namespace }}::{% endif %}{{ enum_data.enum_name }} enum_value<{% if enum_data.namespace %}{{ enum_data.namespace }}::{% endif %}{{ enum_data.enum_name }}>(const std::string& str) {
-     return enum_converter<{% if enum_data.namespace %}{{ enum_data.namespace }}::{% endif %}{{ enum_data.enum_name }}>::enum_value(str);
+    return enum_helpers<{% if enum_data.namespace %}{{ enum_data.namespace }}::{% endif %}{{ enum_data.enum_name }}>::enum_value(str);
 }
+
+template<>
+inline const std::array<{% if enum_data.namespace %}{{ enum_data.namespace }}::{% endif %}{{ enum_data.enum_name }}, enum_count<{% if enum_data.namespace %}{{ enum_data.namespace }}::{% endif %}{{ enum_data.enum_name }}>>& enum_values() {
+    return enum_helpers<{% if enum_data.namespace %}{{ enum_data.namespace }}::{% endif %}{{ enum_data.enum_name }}>::enum_values();
+}
+
+template<>
+inline bool is_valid_enum<{% if enum_data.namespace %}{{ enum_data.namespace }}::{% endif %}{{ enum_data.enum_name }}>({% if enum_data.namespace %}{{ enum_data.namespace }}::{% endif %}{{ enum_data.enum_name }} value) {
+    const auto& found_str = enum_helpers<{% if enum_data.namespace %}{{ enum_data.namespace }}::{% endif %}{{ enum_data.enum_name }}>::enum_str(value);
+    return found_str != "e_invalid" && found_str.empty() == false;
+}
+
+template<>
+inline bool is_valid_enum<{% if enum_data.namespace %}{{ enum_data.namespace }}::{% endif %}{{ enum_data.enum_name }}>(const std::string& str) {
+    return enum_helpers<{% if enum_data.namespace %}{{ enum_data.namespace }}::{% endif %}{{ enum_data.enum_name }}>::enum_value(str) != {% if enum_data.namespace %}{{ enum_data.namespace }}::{% endif %}{{ enum_data.enum_name }}::e_invalid;
+}
+
+template<>
+inline bool is_valid_enum<{% if enum_data.namespace %}{{ enum_data.namespace }}::{% endif %}{{ enum_data.enum_name }}>(int value) {
+    return is_valid_enum(static_cast<{% if enum_data.namespace %}{{ enum_data.namespace }}::{% endif %}{{ enum_data.enum_name }}>(value));
+}
+
 {% endfor %}
-#endif // __TYPES_H__
+#endif // __GENERATED_TYPES_H__

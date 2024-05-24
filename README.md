@@ -59,45 +59,93 @@ The script generates complex C++ code, but its usage is incredibly simple, as sh
 ```cpp
 #include <iostream>
 
-#include "generated/Tables.hpp"
-#include "generated/Types.hpp"
+#include "generated/types.hpp"
+#include "generated/tables.hpp"
 using std::cout;
 using std::endl;
 
 int main()
 {
-	if (TblLoader::initialize("Tables/") == false)
+	cout << "test1. types ---------" << endl;
+	for (const auto& e : enum_values<CharacterType>())
+	{
+		cout << static_cast<int>(e) << "(" << enum_str(e) << ")" << endl;
+	}
+	cout << "CharacterType's enum count:" << enum_count<CharacterType> << endl; // 10
+
+	if (is_valid_enum<CharacterType>("invalid name")) 
+		cout << "valid" << endl;
+	else  
+		cout << "CharacterType::invalid name is invalid" << endl; // display
+
+	if (is_valid_enum(Game::ItemType::e_invalid)) 
+		cout << "valid" << endl;
+	else  
+		cout << "Game::ItemType::e_invalid is invalid" << endl; // display
+
+	if (is_valid_enum(Game::ItemType::AK47)) 
+		cout << "Game::ItemType::AK47 is valid" << endl; // display
+	else  
+		cout << "invalid" << endl;
+
+	if (is_valid_enum<Game::ItemType>(42)) 
+		cout << "valid" << endl;
+	else  
+		cout << "Game::ItemType::42 is invalid" << endl; // display
+
+	if (is_valid_enum<Game::ItemType>(0)) 
+		cout << "Game::ItemType::0 is valid(" << enum_str(static_cast<Game::ItemType>(0)) << ")" << endl; // display
+	else  cout << "invalid" << endl;
+
+	cout << "test2. tables ---------" << endl;
+	if (TblLoader::initialize("tables/") == false)
 	{
 		std::cout << "error" << std::endl;
+		return 0;
 	}
 
-	std::cout << enum_str(CharacterType::e_alexander) << std::endl; // e_alexander
-	std::cout << static_cast<int>(enum_value<CharacterType>("e_alexander")) << std::endl; // 1
-
-	cout << TblCharacter::get(1)->character_name_ << endl; // emily
+	cout << TblCharacter::get(1)->character_name_ << endl;
 	if (auto p = TblCharacter::get(14); p != nullptr)
 	{
-		cout << enum_str(p->item_type_) << endl; // no display
+		cout << enum_str(p->item_type_) << endl;
 	}
 	if (auto p = TblCharacter::get(1); p != nullptr)
 	{
-		cout << enum_str(p->item_type_) << endl; // AK47
+		cout << enum_str(p->item_type_) << endl;
+	}
+	if (auto p = TblCharacter::get(2); p != nullptr)
+	{
+		cout << enum_str(p->item_type_) << endl;
 	}
 
-	if (auto p = Game::TblItem2::get("1"); p != nullptr)
-	{
-		cout << p->item_name_ << endl; // sword
-	}
+	cout << game::TblItem::get("2")->item_name_ << endl;
 }
 ```
 
 output:
 ```
-e_alexander
-1
+test1. types ---------
+1(e_emily)
+2(e_alexander)
+3(e_sophia)
+4(e_benjamin)
+1000(e_olivia)
+1001(e_william)
+1002(e_ava)
+2000(e_james)
+2001(e_liam)
+3000(e_isabella)
+CharacterType's enum count:10
+CharacterType::invalid name is invalid
+Game::ItemType::e_invalid is invalid
+Game::ItemType::AK47 is valid
+Game::ItemType::42 is invalid
+Game::ItemType::0 is valid(MK18_MOD1)
+test2. tables ---------
 emily
 AK47
-sword
+AK74U
+shield
 ```
 
 # Note

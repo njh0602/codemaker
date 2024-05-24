@@ -13,37 +13,65 @@ def get_namespace_from_path(path):
 
 def generate_type_from_csv(output_folder, folder_path):
     enum_datas = []
+    csv_files = []
 
     for root, _, files in os.walk(folder_path):
         csv_files = [f for f in files if f.endswith('.csv')]
-        if not csv_files:  # csv_files가 비어 있으면 함수 종료
-            return
         for file_name in csv_files:
             file_path = os.path.join(root, file_name)
             with open(file_path, newline='') as csvfile:
                 csv_reader = csv.reader(csvfile)
-                enum_values = []
+                enum_name_set = set()
+                enum_value_dict = dict()
+                
+                enum_values = [('e_invalid', -0xffff, '// this value is generated')] # enum_value_name, enum_value, comment
+                enum_name_set.add('e_invalid')
+                enum_value_dict[-0xffff] = 'e_invalid'
+
+                previous_value = -1
+                
                 for row in csv_reader:
-                    if row:  # 빈 줄 무시
-                        name = row[0].strip()
-                        value = row[1].strip() if len(row) > 1 else None
-                        enum_values.append((name, value))
+                    if not row:  
+                        continue # 빈 줄 무시
+
+                    enum_value_name = row[0].strip()
+                    if enum_value_name in enum_name_set:
+                        raise ValueError(f"Duplicate enum_value_name found, enum_value_name={enum_value_name}, file_name={file_name}")
+
+                    value = row[1].strip() if len(row) > 1 else None
+                    if value is None:
+                        if previous_value == -1:
+                            value = "0"
+                        else:
+                            value = str(previous_value + 1)
+
+                    if value in enum_value_dict:
+                        raise ValueError(f"Duplicate enum_value found, enum_value_name={enum_value_name}, enum_value={value}, with '{enum_value_dict[value]}', file_name={file_name}")
+                            
+                    enum_values.append((enum_value_name, value, ''))
+                    enum_name_set.add(enum_value_name)
+                    enum_value_dict[value] = enum_value_name
+                    previous_value = int(value)
                 
                 enum_datas.append({
                     'file_name': file_name,
                     'enum_name': os.path.splitext(file_name)[0],
                     'enum_values': enum_values,
+                    'enum_count': len(enum_values) - 1,
                     'namespace': get_namespace_from_path(os.path.relpath(root, start=folder_path))
                 })
 
-    template_path = os.path.join(script_dir, 'Templates/Types.hpp.template')
+    if not enum_datas:  # enum_datas가 비어 있으면 함수 종료
+        return
+    
+    template_path = os.path.join(script_dir, 'templates/types.hpp.template')
     with open(template_path, 'r') as file:
         template_content = file.read()
 
     template = Template(template_content)
     cpp_code = template.render(enums=enum_datas)
 
-    with open(os.path.join(output_folder, "Types.hpp"), 'w') as single_header_file:
+    with open(os.path.join(output_folder, "types.hpp"), 'w') as single_header_file:
         single_header_file.write(cpp_code)
 
 def generate_table_from_csv(output_folder, folder_path):
@@ -93,11 +121,10 @@ def generate_table_from_csv(output_folder, folder_path):
         return '<error_type>'
 
     class_datas = []
-    
+    csv_files = []
+
     for root, _, files in os.walk(folder_path):
         csv_files = [f for f in files if f.endswith('.csv')]
-        if not csv_files:  # csv_files가 비어 있으면 함수 종료
-            return
         for file_name in csv_files:
             file_path = os.path.join(root, file_name)
             with open(file_path, newline='') as csvfile:
@@ -124,14 +151,17 @@ def generate_table_from_csv(output_folder, folder_path):
                     'namespace': get_namespace_from_path(os.path.relpath(root, start=folder_path))
             })
 
-    template_path = os.path.join(script_dir, 'Templates/Tables.hpp.template')
+    if not class_datas:  # class_datas가 비어 있으면 함수 종료
+        return
+    
+    template_path = os.path.join(script_dir, 'templates/tables.hpp.template')
     with open(template_path, 'r') as file:
         template_content = file.read()
 
     template = Template(template_content)
     cpp_code = template.render(classes=class_datas)
 
-    with open(os.path.join(output_folder, "Tables.hpp"), 'w') as single_header_file:
+    with open(os.path.join(output_folder, "tables.hpp"), 'w') as single_header_file:
         single_header_file.write(cpp_code)
 
 def main():
