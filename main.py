@@ -181,4 +181,7 @@ def main():
     generate_type_from_csv(output_folder, types_folder)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except ValueError as e:
+        print(e)
